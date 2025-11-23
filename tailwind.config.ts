@@ -54,11 +54,15 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
-        "great-ball": {
-          DEFAULT: "hsl(var(--great-ball))",
-          foreground: "hsl(var(--great-ball-foreground))",
-        },
-        sidebar: {
+				"great-ball": {
+					DEFAULT: "hsl(var(--great-ball))",
+					foreground: "hsl(var(--great-ball-foreground))",
+				},
+				"friend-ball": {
+					DEFAULT: "hsl(var(--friend-ball))",
+					foreground: "hsl(var(--friend-ball-foreground))",
+				},
+				sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",

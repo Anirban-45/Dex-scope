@@ -38,12 +38,16 @@ const QuizCard = ({
   };
 
   const getLetterHint = () => {
-    if (hintLevel >= 3) {
+    if (hintLevel === 1) {
+      return `💡 Ability: ${pokemon.abilities.join(", ")}`;
+    } else if (hintLevel === 2) {
+      return `💡 Type: ${pokemon.types.join(", ")}`;
+    } else if (hintLevel >= 3) {
       const displayName = pokemon.name
         .split("")
         .map((char, idx) => (idx < revealedLetters ? char : "_"))
         .join(" ");
-      return `Name: ${displayName.toUpperCase()}`;
+      return `💡 Name: ${displayName.toUpperCase()}`;
     }
     return null;
   };
@@ -56,7 +60,7 @@ const QuizCard = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-2xl mx-auto"
     >
-      <div className="bg-gradient-to-br from-card to-card/80 rounded-3xl p-6 shadow-[var(--shadow-card)] border border-border">
+      <div className="bg-gradient-to-br from-card to-card/80 rounded-3xl p-8 shadow-[var(--shadow-card)] border border-border">
         {/* Stats Display */}
         <div className="space-y-4 mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -83,7 +87,7 @@ const QuizCard = ({
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 p-3 rounded-lg bg-secondary/20 text-center text-sm font-bold text-foreground"
           >
-            💡 {letterHint}
+            {letterHint}
           </motion.div>
         )}
 

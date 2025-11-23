@@ -9,19 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trophy, RotateCcw, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import scopeLensImage from "@/assets/scope-lens.png";
 const Index = () => {
   const [pokemon, setPokemon] = useState<Pokemon | null>(null);
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
   const [guessCount, setGuessCount] = useState(0);
+  const [score, setScore] = useState(0);
   const [generation, setGeneration] = useState<string>("all");
   const [strongOnly, setStrongOnly] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -34,19 +29,28 @@ const Index = () => {
 
   // Fuzzy match function for spelling tolerance
   const fuzzyMatch = (guess: string, target: string): boolean => {
-    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const g = normalize(guess);
-    const t = normalize(target);
+    // Normalize: lowercase, convert spaces to dashes for comparison
+    const normalizeSpacing = (str: string) => str.toLowerCase().replace(/\s+/g, "-");
+    const g = normalizeSpacing(guess);
+    const t = normalizeSpacing(target);
+    
+    // Remove all non-alphanumeric for fuzzy matching
+    const removeSpecial = (str: string) => str.replace(/[^a-z0-9]/g, "");
+    const gClean = removeSpecial(g);
+    const tClean = removeSpecial(t);
 
-    // Exact match
+    // Exact match (with dashes/spaces normalized)
     if (g === t) return true;
+    
+    // Exact match without special characters
+    if (gClean === tClean) return true;
 
     // Allow up to 2 character differences for longer names
-    if (t.length > 5) {
+    if (tClean.length > 5) {
       let differences = 0;
-      const maxLen = Math.max(g.length, t.length);
+      const maxLen = Math.max(gClean.length, tClean.length);
       for (let i = 0; i < maxLen; i++) {
-        if (g[i] !== t[i]) differences++;
+        if (gClean[i] !== tClean[i]) differences++;
         if (differences > 2) return false;
       }
       return differences <= 2;
@@ -60,6 +64,7 @@ const Index = () => {
     setHintLevel(0);
     setRevealedLetters(0);
     setShowLetterModal(false);
+    setGuessCount(0);
     try {
       const gen = generation === "all" ? undefined : parseInt(generation);
       const minBST = strongOnly ? 450 : undefined;
@@ -81,8 +86,10 @@ const Index = () => {
   }, [generation, strongOnly]);
   const handleGuess = (guess: string) => {
     if (!pokemon || revealed) return;
-    setGuessCount(prev => prev + 1);
+    
     if (fuzzyMatch(guess, pokemon.name)) {
+      setGuessCount(prev => prev + 1);
+      setScore(prev => prev + 1);
       setRevealed(true);
       toast({
         title: "Correct! 🎉",
@@ -90,9 +97,20 @@ const Index = () => {
       });
       setFeedback(null);
     } else {
-      // Generation feedback
+      // Generation feedback - only increment guess count for valid Pokémon
       const guessLower = guess.toLowerCase();
       fetch(`https://pokeapi.co/api/v2/pokemon/${guessLower}`).then(res => res.json()).then(data => {
+        setGuessCount(prev => prev + 1); // Increment for valid wrong guess
+        
+        // Check if it's an alternate form
+        const targetNameBase = pokemon.name.toLowerCase().split('-')[0];
+        const guessedNameBase = data.name.toLowerCase().split('-')[0];
+        
+        if (targetNameBase === guessedNameBase && pokemon.name.includes('-')) {
+          setFeedback(`❌ Close! This Pokémon might be an alternate form. Try adding a form name!`);
+          return;
+        }
+        
         const guessedGen = getGenerationFromId(data.id);
         if (guessedGen < pokemon.generation) {
           setFeedback(`❌ Wrong! Try a newer generation.`);
@@ -122,12 +140,11 @@ const Index = () => {
   };
   const handleReset = () => {
     setGuessCount(0);
+    setScore(0);
     generateQuestion();
   };
-
   const handleHint = () => {
     if (revealed) return;
-    
     if (hintLevel === 0) {
       setHintLevel(1); // Show abilities
     } else if (hintLevel === 1) {
@@ -140,13 +157,11 @@ const Index = () => {
       }
     }
   };
-
   const confirmLetterReveal = () => {
     setShowLetterModal(false);
     setHintLevel(3);
     setRevealedLetters(1);
   };
-
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       normal: "bg-gray-400",
@@ -161,12 +176,12 @@ const Index = () => {
       flying: "bg-indigo-400",
       psychic: "bg-pink-500",
       bug: "bg-lime-500",
-      rock: "bg-stone-600",
+      rock: "bg-amber-700",
       ghost: "bg-purple-700",
       dragon: "bg-indigo-600",
       dark: "bg-gray-700",
       steel: "bg-slate-500",
-      fairy: "bg-pink-400",
+      fairy: "bg-pink-400"
     };
     return colors[type.toLowerCase()] || "bg-gray-500";
   };
@@ -191,7 +206,7 @@ const Index = () => {
       </div>;
   }
   return <div className="min-h-screen bg-gradient-to-br from-background to-background/80 flex items-center justify-center p-4">
-      <div className="w-full max-w-[960px]">
+      <div className="w-full max-w-6xl">
         {/* Header */}
         <motion.div initial={{
         opacity: 0,
@@ -200,11 +215,14 @@ const Index = () => {
         opacity: 1,
         y: 0
       }} className="text-center mb-6">
-          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-2">
-            Dex Scope
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img src={scopeLensImage} alt="Scope Lens" className="w-10 h-10 pixelated" />
+            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Dex Scope 
+            </h1>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Guess the Pokémon based on their stats!
+            Guess the Pokémon based on its stats!
           </p>
         </motion.div>
 
@@ -254,56 +272,7 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Pokémon Image */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border"
-            >
-              <div className="relative w-full aspect-square rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center overflow-hidden">
-                {revealed ? (
-                  <motion.img
-                    src={pokemon.sprite}
-                    alt={pokemon.name}
-                    className="w-full h-full object-contain p-4"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                  />
-                ) : (
-                  <div className="text-6xl">❓</div>
-                )}
-              </div>
-
-              {/* Revealed Hints */}
-              {hintLevel >= 1 && (
-                <div className="mt-4 space-y-2">
-                  {hintLevel >= 1 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Ability:</p>
-                      <p className="text-sm font-medium">{pokemon.abilities.join(", ")}</p>
-                    </div>
-                  )}
-                  {hintLevel >= 2 && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Type:</p>
-                      <div className="flex gap-2">
-                        {pokemon.types.map((type) => (
-                          <Badge
-                            key={type}
-                            className={`${getTypeColor(type)} text-white border-0`}
-                          >
-                            {type}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-
-            {/* Guess Counter */}
+            {/* Guess Counter & Score */}
             <motion.div initial={{
             opacity: 0,
             scale: 0.9
@@ -311,12 +280,20 @@ const Index = () => {
             opacity: 1,
             scale: 1
           }} className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border">
-              <div className="text-center space-y-2">
-                <div className="flex items-center justify-center gap-2">
-                  <Trophy className="w-5 h-5 text-primary" />
-                  <span className="text-xl font-bold text-foreground">
-                    Guesses: {guessCount}
-                  </span>
+              <div className="text-center space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Trophy className="w-5 h-5 text-primary" />
+                    <span className="text-xl font-bold text-foreground">
+                      Guesses: {guessCount}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Trophy className="w-5 h-5 text-accent" />
+                    <span className="text-xl font-bold text-foreground">
+                      Score: {score}
+                    </span>
+                  </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleReset} className="w-full gap-2">
                   <RotateCcw className="w-4 h-4" />
@@ -325,34 +302,60 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Next Button */}
-            
-          </div>
-
-          {/* Right Column - Quiz Card */}
-          <div className=" grid gap-4">
-            <QuizCard 
-              pokemon={pokemon} 
-              onGuess={handleGuess} 
-              showImage={revealed} 
-              feedback={feedback} 
-              onShowAnswer={handleShowAnswer}
-              hintLevel={hintLevel}
-              revealedLetters={revealedLetters}
-              onHint={handleHint}
-            />
-
-            {revealed && <motion.div initial={{
+            {/* Pokémon Image */}
+            <motion.div initial={{
             opacity: 0,
             scale: 0.9
           }} animate={{
             opacity: 1,
             scale: 1
-          }}>
-                <Button size="lg" onClick={handleNext} className="w-full text-base px-6 bg-[#1CAD62] hover:bg-[#179855]">
-                  Next Question →
-                </Button>
-              </motion.div>}
+          }} className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border">
+              <div className="relative w-full aspect-square rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center overflow-hidden">
+                {revealed ? <motion.img src={pokemon.sprite} alt={pokemon.name} className="w-full h-full object-contain p-4" initial={{
+                opacity: 0,
+                scale: 0.8
+              }} animate={{
+                opacity: 1,
+                scale: 1
+              }} transition={{
+                duration: 0.5
+              }} /> : <div className="text-6xl">❓</div>}
+              </div>
+
+              {/* Revealed Hints */}
+              {(hintLevel >= 1 || revealed) && <div className="mt-4 space-y-2">
+                  {(hintLevel >= 1 || revealed) && <div>
+                      <p className="text-xs text-muted-foreground mb-1">Ability:</p>
+                      <p className="text-sm font-medium">{pokemon.abilities.join(", ")}</p>
+                    </div>}
+                  {(hintLevel >= 2 || revealed) && <div>
+                      <p className="text-xs text-muted-foreground mb-1">Type:</p>
+                      <div className="flex gap-2">
+                        {pokemon.types.map(type => <Badge key={type} className={`${getTypeColor(type)} text-white border-0`}>
+                            {type}
+                          </Badge>)}
+                      </div>
+                    </div>}
+                 </div>}
+            </motion.div>
+          </div>
+
+          {/* Right Column - Quiz Card */}
+          <div className="space-y-4">
+            <QuizCard pokemon={pokemon} onGuess={handleGuess} showImage={revealed} feedback={feedback} onShowAnswer={handleShowAnswer} hintLevel={hintLevel} revealedLetters={revealedLetters} onHint={handleHint} />
+            
+            {/* Next Button */}
+            {revealed && <motion.div initial={{
+              opacity: 0,
+              scale: 0.9
+            }} animate={{
+              opacity: 1,
+              scale: 1
+            }}>
+              <Button size="lg" onClick={handleNext} className="w-full text-base px-6 bg-friend-ball text-friend-ball-foreground hover:bg-friend-ball/90">
+                Next Question →
+              </Button>
+            </motion.div>}
           </div>
         </div>
 
