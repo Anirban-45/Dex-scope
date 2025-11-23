@@ -58,9 +58,9 @@ const QuizCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-2xl mx-auto"
+      className="w-full max-w-3xl mx-auto"
     >
-      <div className="bg-gradient-to-br from-card to-card/80 rounded-3xl p-8 shadow-[var(--shadow-card)] border border-border">
+      <div className="bg-gradient-to-br from-card to-card/80 rounded-3xl p-6 shadow-[var(--shadow-card)] border border-border">
         {/* Stats Display */}
         <div className="space-y-4 mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -103,7 +103,7 @@ const QuizCard = ({
         )}
 
         {/* Guess Input */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
             value={guess}

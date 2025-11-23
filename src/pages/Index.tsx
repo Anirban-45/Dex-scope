@@ -165,7 +165,7 @@ const Index = () => {
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       normal: "bg-gray-400",
-      fire: "bg-orange-500",
+      fire: "bg-orange-600",
       water: "bg-blue-500",
       electric: "bg-yellow-400",
       grass: "bg-green-500",
@@ -205,8 +205,8 @@ const Index = () => {
         </motion.div>
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-background to-background/80 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl">
+  return <div className="min-h-screen bg-gradient-to-br from-background/60 to-background/40 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
         {/* Header */}
         <motion.div initial={{
         opacity: 0,
@@ -216,12 +216,12 @@ const Index = () => {
         y: 0
       }} className="text-center mb-6">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <img src={scopeLensImage} alt="Scope Lens" className="w-10 h-10 pixelated" />
-            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            <img src={scopeLensImage} alt="Scope Lens" className="w-12 h-13" />
+            <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-gray-600 to-gray-600 bg-clip-text text-transparent">
               Dex Scope 
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm font-medium text-foreground/70">
             Guess the Pokémon based on its stats!
           </p>
         </motion.div>
@@ -245,7 +245,7 @@ const Index = () => {
               <div className="space-y-3">
                 <div className="space-y-2">
                   <Select value={generation} onValueChange={setGeneration}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-9 rounded-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -269,36 +269,6 @@ const Index = () => {
                     Strong Pokémon (BST 450+)
                   </label>
                 </div>
-              </div>
-            </motion.div>
-
-            {/* Guess Counter & Score */}
-            <motion.div initial={{
-            opacity: 0,
-            scale: 0.9
-          }} animate={{
-            opacity: 1,
-            scale: 1
-          }} className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border">
-              <div className="text-center space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5 text-primary" />
-                    <span className="text-xl font-bold text-foreground">
-                      Guesses: {guessCount}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5 text-accent" />
-                    <span className="text-xl font-bold text-foreground">
-                      Score: {score}
-                    </span>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleReset} className="w-full gap-2">
-                  <RotateCcw className="w-4 h-4" />
-                  Reset
-                </Button>
               </div>
             </motion.div>
 
@@ -338,10 +308,41 @@ const Index = () => {
                     </div>}
                  </div>}
             </motion.div>
+
+            {/* Guess Counter & Score */}
+            <motion.div initial={{
+            opacity: 0,
+            scale: 0.9
+          }} animate={{
+            opacity: 1,
+            scale: 1
+          }} className="bg-card/50 backdrop-blur-sm rounded-2xl p-4 border border-border">
+              <div className="text-center space-y-3">
+                <div className="flex flex-row justify-between">
+                  <div className="flex items-center justify-center gap-2">
+                    <Trophy className="w-5 h-5 text-primary" />
+                    <span className="text-xl font-bold text-foreground">
+                      Guesses: {guessCount}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    {/* <Trophy className="w-5 h-5 text-accent" /> */}
+                    <span className="text-xl font-bold text-foreground">
+                      Score: {score}
+                    </span>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleReset} className="w-full gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Reset
+                </Button>
+              </div>
+            </motion.div>
+
           </div>
 
           {/* Right Column - Quiz Card */}
-          <div className="space-y-4">
+          <div className="grid gap-4">
             <QuizCard pokemon={pokemon} onGuess={handleGuess} showImage={revealed} feedback={feedback} onShowAnswer={handleShowAnswer} hintLevel={hintLevel} revealedLetters={revealedLetters} onHint={handleHint} />
             
             {/* Next Button */}
@@ -352,12 +353,21 @@ const Index = () => {
               opacity: 1,
               scale: 1
             }}>
-              <Button size="lg" onClick={handleNext} className="w-full text-base px-6 bg-friend-ball text-friend-ball-foreground hover:bg-friend-ball/90">
+              <Button size="lg" onClick={handleNext} className=" w-full text-base px-6 bg-friend-ball text-friend-ball-foreground hover:bg-friend-ball-foreground/80">
                 Next Question →
               </Button>
             </motion.div>}
           </div>
         </div>
+
+        <span className=" flex items-center justify-center mt-6">
+          <p className="text-sm text-foreground/70 font-medium">
+            Created by qitzuphyn. If you find any bugs, please contact me at &nbsp;
+            <a href="mailto:anirban.tasfin.azad@gmail.com" className="text-[#c12e3a] font-semild underline-offset-4 hover:underline">
+              my email
+            </a>!
+          </p>
+        </span>
 
         {/* Letter Reveal Modal */}
         <Dialog open={showLetterModal} onOpenChange={setShowLetterModal}>

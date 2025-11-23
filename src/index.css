@@ -42,7 +42,7 @@ All colors MUST be HSL.
     --great-ball: 214 87% 50%;
     --great-ball-foreground: 0 0% 100%;
 
-    --friend-ball: 142 76% 45%;
+    --friend-ball: 149, 72%, 39%;
     --friend-ball-foreground: 0 0% 100%;
 
     --radius: 1rem;
@@ -129,6 +129,14 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  #root {
+    min-height: 100vh;
+    background-image: url('./assets/Background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   .pixelated {
